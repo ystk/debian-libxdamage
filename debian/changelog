@@ -1,3 +1,21 @@
+libxdamage (1:1.1.4-2) unstable; urgency=low
+
+  [ Timo Aaltonen ]
+  * control: Mark -dev as M-A: same. (LP: #1230252)
+
+ -- Julien Cristau <jcristau@debian.org>  Sat, 12 Jul 2014 17:22:46 +0200
+
+libxdamage (1:1.1.4-1) unstable; urgency=low
+
+  * New upstream release.
+  * Bump debhelper compat level to 7.
+  * Use dpkg-buildflags.
+  * Disable silent rules.
+  * Replace dh_clean -k with dh_prep.
+  * Add build-{arch,indep} rules (same as build).
+
+ -- Julien Cristau <jcristau@debian.org>  Mon, 24 Jun 2013 10:18:30 +0200
+
 libxdamage (1:1.1.3-2) unstable; urgency=low
 
   * Team upload.

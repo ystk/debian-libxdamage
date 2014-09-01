@@ -12,12 +12,6 @@ PACKAGE = libxdamage1
 
 include debian/xsfbs/xsfbs.mk
 
-CFLAGS = -Wall -g
-ifneq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
-else
-	CFLAGS += -O2
-endif
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 	NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 	MAKEFLAGS += -j$(NUMJOBS)
@@ -32,18 +26,21 @@ ifeq ($(DEB_BUILD_GNU_TYPE), $(DEB_HOST_GNU_TYPE))
 else
 	confflags += --build=$(DEB_BUILD_GNU_TYPE) --host=$(DEB_HOST_GNU_TYPE)
 endif
+confflags += $(shell DEB_CFLAGS_MAINT_APPEND=-Wall dpkg-buildflags --export=configure)
 
-
-build: patch build-stamp
-build-stamp:
+build-arch: build
+build-indep: build
+build: build-stamp
+build-stamp: $(STAMP_DIR)/patch
 	dh_testdir
 	autoreconf -vfi
 	mkdir -p build
 	cd build && \
 	../configure --prefix=/usr --mandir=\$${prefix}/share/man \
 	             --libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
-	             --infodir=\$${prefix}/share/info $(confflags) \
-	             CFLAGS="$(CFLAGS)" 
+	             --infodir=\$${prefix}/share/info \
+	             --disable-silent-rules \
+	             $(confflags)
 	cd build && $(MAKE)
 	>$@
 
@@ -51,7 +48,6 @@ clean: xsfclean
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp
-
 	rm -f config.cache config.log config.status
 	rm -f */config.cache */config.log */config.status
 	rm -f conftest* */conftest*
@@ -65,19 +61,17 @@ clean: xsfclean
 install: build
 	dh_testdir
 	dh_testroot
-	dh_clean -k
+	dh_prep
 	dh_installdirs
-
 	cd build && $(MAKE) DESTDIR=$(CURDIR)/debian/tmp install
 
 # Build architecture-dependent files here.
 binary-arch: build install
 	dh_testdir
 	dh_testroot
-
 	dh_installdocs
-	dh_install --sourcedir=debian/tmp --list-missing --exclude=libXdamage.la
-	dh_installchangelogs ChangeLog
+	dh_install --list-missing --exclude=libXdamage.la
+	dh_installchangelogs
 	dh_link
 	dh_strip --dbg-package=$(PACKAGE)-dbg
 	dh_compress
@@ -95,3 +89,4 @@ binary-indep: build install
 
 binary: binary-indep binary-arch
 .PHONY: build clean binary-indep binary-arch binary install
+.PHONY: build-indep build-arch
